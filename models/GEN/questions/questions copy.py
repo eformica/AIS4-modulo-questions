@@ -30,6 +30,7 @@ class Projeto:
         self.enrich_data_models = {}
 
 
+
 class Ideacao:
     
     def _IdeacaoInicial(self):
