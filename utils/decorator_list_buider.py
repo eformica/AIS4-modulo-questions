@@ -1,9 +1,46 @@
 import functools
 import inspect
 
-class DecoratorListBuider:
-    def __init__(self):
-        self._dec_list = []
+class SingletonWithID:
+    _instances = {}
+    _datalist = {}
+
+    def __new__(cls, id, *args, **kwargs):
+        if id not in cls._instances.keys():
+            cls._instances[id] = super().__new__(cls)
+            cls._datalist[id] = []
+            cls._instances[id].__init__(id, *args, **kwargs)
+        return cls._instances[id]
+    
+class DecoratorListBuider(SingletonWithID):
+
+    def __init__(self, id, enable_self_key_remover=True):
+        self.id = id
+        self._dec_list = SingletonWithID._datalist[id]
+        
+        if enable_self_key_remover:
+            self.config_self_key_remover(True)
+        else:
+            self.config_self_key_remover(False)
+
+    def config_self_key_remover(self, enable=True, key_name="self", key_position=0):
+        """Criado para remover o elemento 'self' da primeira posicao dos parametros, caso o create_decorator seja usado dentro de uma classe."""
+
+        self._selfkeyremover_enable = enable
+        self._selfkeyremover_key_name = key_name
+        self._selfkeyremover_key_position = key_position
+
+    def _process_selfkeyremover(self, obj: dict):
+        if self._selfkeyremover_enable == False:
+            return obj
+        
+        if len(obj.keys()) < self._selfkeyremover_key_position:
+            return obj
+        
+        if list(obj.keys())[self._selfkeyremover_key_position] == self._selfkeyremover_key_name:
+            del obj[self._selfkeyremover_key_name]
+
+        return obj
 
     def create_decorator(self, func):
         """Cria um decorator construtor para novos decorators"""
@@ -18,12 +55,14 @@ class DecoratorListBuider:
 
             if tem_args:
                 raise Exception("'*args' not allowed.")
+            
+            kwargs_params = [param.name for param in params.values() if param.kind == inspect.Parameter.VAR_KEYWORD]
 
             param_dict = {param.name: param.default if param.default is not inspect._empty else None for param in params.values()}
 
-            return param_dict
+            return (param_dict, kwargs_params)
         
-        func_params = _get_params(func)
+        func_params, kwargs_params = _get_params(func)
 
         if len(func_params) == 0: #Cria decorator simples
 
@@ -61,13 +100,17 @@ class DecoratorListBuider:
                 
                 for k, v in func_params.items():
                     if k not in propertys_to_register.keys():
-                        if v == None:
+                        if k in kwargs_params:
                             propertys_to_register[k] = propertys_to_register_kwargs
                         else:
                             propertys_to_register[k] = v
 
                 #-------------------------------------------------------------------------------
 
+                propertys_to_register = self._process_selfkeyremover(propertys_to_register)
+
+                #-------------------------------------------------------------------------------
+                
                 def wrapper1(func2):
                     self._dec_list.append((func2, propertys_to_register))
 
@@ -85,7 +128,7 @@ class DecoratorListBuider:
         
 if __name__ == "__main__":
 
-    DLB = DecoratorListBuider()
+    DLB = DecoratorListBuider("TESTE")
 
     @DLB.create_decorator
     def decorator_com_parametros(a, b, c, d=3, **kwargs):
@@ -116,23 +159,22 @@ if __name__ == "__main__":
         # O corpo da funcao decorada por 'create_decorator' é executado somente quando o decorator é declarado sobre
         # outra funcao. Isso é util para documentação e validação dos parametros do decorator.
 
-    @decorator_com_parametros(1, 2, d=4, c=3, z="vai para kwargs")
-    def xxx(a, b, c):
-        ...
+        @decorator_com_parametros(1, 2, d=4, c=3, z="vai para kwargs")
+        def xxx(a, b, c):
+            ...
 
-    print(DLB.get_list())
+        print(DLB.get_list())
 
-    @DLB.create_decorator
-    def decorator_sem_parametros():
-        "Neste caso apenas a função decorada entra na lista."
+        @DLB.create_decorator
+        def decorator_sem_parametros():
+            "Neste caso apenas a função decorada entra na lista."
 
-    @decorator_sem_parametros
-    def soma(a, b):
-        return a + b
-    
-    print(DLB.get_list())
+        @decorator_sem_parametros
+        def soma(a, b):
+            return a + b
+        
+        print(DLB.get_list())
 
-    print(soma(2, 3)) # A funcao decorada nao é afetada pelo decorador
+        print(soma(2, 3)) # A funcao decorada nao é afetada pelo decorador
 
-    print(DLB.get_l
-          ist()) # A execucao da funcao decorada nao altera em nada o objeto do DecoratorBuider
+        print(DLB.get_list()) # A execucao da funcao decorada nao altera em nada o objeto do DecoratorBuider

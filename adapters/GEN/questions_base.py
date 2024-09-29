@@ -1,3 +1,5 @@
+from domain.ports.GEN import *
+
 from abc import ABC, abstractmethod
 
 import re
@@ -44,16 +46,10 @@ class Especificacao_da_Resposta:
     def __repr__(self) -> str:
         return "<" + self.repr + ">"
 
-class BaseInfoModel:
-    pass
 
 class Tabela(BaseInfoModel):
     def __init__(self, data_model: dict) -> None:
         self.data_model = data_model
-
-class BaseValuesClass:
-    def __init__(self) -> None:
-        pass
 
 class Questao(BaseInfoModel):
     def __init__(self

@@ -1,18 +1,25 @@
-import inspect
+class SingletonWithID:
+    _instances = {}
+    _datalists = {}
 
-def teste(a, b=2, *args, **kwargs):
+    def __new__(cls, id, *args, **kwargs):
+        if id not in cls._instances.keys():
+            cls._instances[id] = super().__new__(cls)
+            cls._datalists[id] = []
+            cls._instances[id].__init__(id, *args, **kwargs)
+        return cls._instances[id]
 
-    def _get_params(func):
-        sig = inspect.signature(func)
-        
-        params = sig.parameters
-        param_dict = {param.name: param.default if param.default is not inspect._empty else None for param in params.values()}
+class Pessoa(SingletonWithID):
 
-        return param_dict
+    def __init__(self, id, nome):
+        self.nome = nome
+        print(SingletonWithID._instances)
 
-    param_dict = _get_params(teste)
+# Criando instâncias
+p1 = Pessoa(1, "Alice")
+p2 = Pessoa(1, "Bob")  # Retornará a instância p1
+p3 = Pessoa(2, "Charlie")
 
-    for k, v in param_dict.items():
-        param_dict[k] = eval(k)
-
-        print(param_dict)
+print(p1 is p2)  # True, pois p2 é a mesma instância que p1
+print(p1.nome, p2.nome)   # Alice
+print(SingletonWithID._instances)

@@ -1,15 +1,15 @@
-from tasks_packeges import *
-from questions_base import Especificacao_da_Resposta, Questao, Repositorio, Tabela, format_text
+from application.app import app
 
-TopicosParaDesenvolvimento = Repositorio(Questao({"nome do topico": Especificacao_da_Resposta(str)
+from adapters.tasks_packeges import *
+from adapters.GEN.questions_base import Especificacao_da_Resposta, Questao, Repositorio, Tabela, format_text
+
+TopicosParaDesenvolvimento = Repositorio({"nome do topico": Especificacao_da_Resposta(str)
                                        , "categoria": Especificacao_da_Resposta(str, valores_possiveis=[""])
                                        })
-                                        )
 
-PalavrasChave = Repositorio(Questao({"palavra-chave": Especificacao_da_Resposta(str)
-                                       , "categoria": Especificacao_da_Resposta(str, valores_possiveis=[""])
-                                       })
-                                        )
+PalavrasChave = Repositorio({"palavra-chave": Especificacao_da_Resposta(str)
+                            , "categoria": Especificacao_da_Resposta(str, valores_possiveis=[""])
+                            })
 
 class Espec_PalavrasChave:
     ...
@@ -20,26 +20,37 @@ class Espec_Dominio:
 class Espec_Abrangencia:
     ...
 
+@app.add_to_execution_list()
 class Projeto:
-    def __init__(self, tema: str, objetivo: str, especificacoes: str = None, project_id: int|None = None):
-        self.project_id = project_id
+    def __init__(self, tema: str, objetivo: str, especificacoes: str = None, uuid: int|None = None):
+        self.uuid = uuid
         self.tema = tema
         self.objetivo = objetivo
         self.especificacoes = especificacoes
         
         self.enrich_data_models = {}
 
-
-
+@app.add_to_execution_list(trigger_class=Projeto)
 class Ideacao:
+
+    def __init__(self, projeto: Projeto):
+        self.projeto = projeto
+
+        self.controller = ExecutionController(__class__, self.projeto.uuid)
+
+    @property
+    def input_object(self): #Mandatorio
+        return self.projeto
     
-    def _IdeacaoInicial(self):
-        preposicao = f"Dado o tema '{self.tema}', proponha idéias para '{self.objetivo}'."
+    @property
+    def question(self):
+        preposicao = f"Dado o tema '{self.projeto.tema}', proponha idéias para '{self.projeto.objetivo}'."
 
-        if self.especificacoes is not None:
-            preposicao += f" Considere as seguintes especificações: '{self.especificacoes}'."
+        if self.projeto.especificacoes is not None:
+            preposicao += f" Considere as seguintes especificações: '{self.projeto.especificacoes}'."
 
-        Ideia = Questao({"nome da ideia": Especificacao_da_Resposta(str)
+        question = Questao(
+                {"nome da ideia": Especificacao_da_Resposta(str)
                 , "descrição": Especificacao_da_Resposta(str) 
                 , "exposição do problema": Especificacao_da_Resposta(str)
                 , "importancia": Especificacao_da_Resposta(str)
@@ -49,13 +60,57 @@ class Ideacao:
                 , "abrangencia": [Especificacao_da_Resposta(str)]
                 , "categoria do objetivo": Especificacao_da_Resposta(str, valores_possiveis=["Desenvolvimento de Negócio", "Desenvolvimento Tecnológico", "Trabalho Acadêmico"])
                 }
-                , respostas_multiplas=False
+                , origin_class=__class__
+                , input_object=self.input_object
                 , preposicao=preposicao
+                , respostas_multiplas = True
                 , agrupar=False
                 )
         
-        return LLM_OpenAI_ChatCompletion_Sync(Ideia)
+        return LLM_OpenAI_ChatCompletion_Sync(question)
+    
+    def send_question(self):
+        self.question.send()
 
+    def register_response(self, response):
+        ValuesClass = self.question.get_values_class()
+
+        Obj = ValuesClass(response)
+
+        repo = Repositorio() #...
+
+#        Obj.add_repo(repo)
+
+#        Obj.insert_all_and_commit()
+
+
+#print(app._execution_list)
+    
+
+
+
+# proj = Projeto("Tema1", "Objetivo grandioso")
+
+# X = Ideacao(proj)
+
+# items = X.controller.items
+
+# print(items)
+# print("______________________________________________________________________________")
+
+# print(items["IdeacaoInicial"]())
+# print("______________________________________________________________________________")
+
+# print(items["AnalisePublicoAlvo"]().content)
+# print("______________________________________________________________________________")
+
+# #print(items["AnalisePublicoAlvo"]().content.preposicao)
+
+# print(X.controller.send_item("AnalisePublicoAlvo"))
+
+
+
+class PublicoAlvo:
 
     def _PublicoAlvo(self):
         preposicao = f"""Dado o tema '{self.tema}' e o objetivo '{self.objetivo}', avalie a ideia '{
@@ -117,40 +172,6 @@ class Ideacao:
                     , preposicao=preposicao)
         
         return LLM_OpenAI_ChatCompletion_Sync(Diferenciais)
-    
-
-    def __init__(self, projeto: Projeto):
-        self.project_id = projeto.project_id
-        self.tema = projeto.tema
-        self.objetivo = projeto.objetivo
-        self.especificacoes = projeto.especificacoes
-
-        self.controller = ExecutionController(__class__, self.project_id)
-        self.controller.add_item("IdeacaoInicial", self._IdeacaoInicial)
-        self.controller.add_item("AnalisePublicoAlvo", self._PublicoAlvo)
-        self.controller.add_item("AnaliseConcorrencia", self._AnaliseConcorrencia)
-        self.controller.add_item("AnaliseDiferenciais", self._AnaliseDiferenciais)
-
-proj = Projeto("Tema1", "Objetivo grandioso")
-
-X = Ideacao(proj)
-
-items = X.controller.items
-
-print(items)
-print("______________________________________________________________________________")
-
-print(items["IdeacaoInicial"]())
-print("______________________________________________________________________________")
-
-# print(items["AnalisePublicoAlvo"]().content)
-# print("______________________________________________________________________________")
-
-# #print(items["AnalisePublicoAlvo"]().content.preposicao)
-
-# print(X.controller.send_item("AnalisePublicoAlvo"))
-
-
 
         #     data_model = {"geral": Perguntar(Ideia),
         #     "diferenciais": [Perguntar(Diferenciais, 3)],
