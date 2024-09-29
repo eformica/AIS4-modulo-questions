@@ -1,6 +1,7 @@
-from domain.ports.GEN import *
+from application.app import app
 
-from abc import ABC, abstractmethod
+from domain.ports.GEN import *
+from domain.ports.mensages_packs_port import BaseMessagePack
 
 import re
 import inspect
@@ -52,21 +53,30 @@ class Tabela(BaseInfoModel):
         self.data_model = data_model
 
 class Questao(BaseInfoModel):
+    """
+    data_model: modelo de dados usado para a geracao da pergunta/resposta
+    origin_class: classe do objeto GEN de origem
+    input_object: objeto de entrada para instanciação da classe de origem
+    preposicao: pergunta a ser enviada
+    respostas_multiplas: True -> a resposta retorna em list, False: a resposta retorna em dict
+    agrupar: (Somente para respostas respostas_multiplas == True)
+             True -> Registra o objeto de retorno em instancias separadas,
+             False -> Registra o objeto de retorno na mesma instancia
+    """
     def __init__(self
                  , data_model: dict
                  , origin_class: str
                  , input_object: object
                  , preposicao: str = None
+                 , send_preposition_protocol: BaseMessagePack = None
                  , respostas_multiplas: bool = False
                  , agrupar: bool = True
-                 , **kwargs) -> None:
+                 ):
         
         self._data_model = data_model
 
-        self._origin_class_name = origin_class.__name__
-        self._origin_class_src = inspect.getfile(origin_class)
-        self._input_object_class_name = input_object.__class__.__name__
-        self._input_object_class_src = inspect.getfile(input_object.__class__)
+        self._origin_class = origin_class
+        self._input_object_class = input_object.__class__
         self._input_object_uuid = input_object.uuid
 
         self._respostas_multiplas = respostas_multiplas
@@ -75,29 +85,32 @@ class Questao(BaseInfoModel):
 
             if respostas_multiplas == True:
                 agrupar = True
-                data_model_preposicao = {"resultados": [self.data_model, ]}
+                data_model_preposicao = {"resultados": [self._data_model, ]}
                 self._preposicao = preposicao + f" Retorne o resultado em uma lista JSON conforme o seguinte modelo de dados: {data_model_preposicao}"
             else:
-                self._preposicao = preposicao + f" Retorne o resultado em JSON conforme o seguinte modelo de dados: {self.data_model}"
+                self._preposicao = preposicao + f" Retorne o resultado em JSON conforme o seguinte modelo de dados: {self._data_model}"
+
+        else:
+            if not type(send_preposition_protocol) == BaseMessagePack:
+                raise Exception("'send_preposition_protocol' must be a 'BaseMessagePack' type.")
+        
+        self.send_preposition_protocol = send_preposition_protocol
 
         self._agrupar = agrupar
 
-        for k, v in kwargs.items():
-            setattr(self, k, v)
-
-        self.ValuesClass = self.__datamodel_to_values_class()
-    
-    def get_question(self):
-        question_packege = {"origin_class_name": self._origin_class_name
-                            , "origin_class_src": self._origin_class_src
-                            , "input_object_class_name": self._input_object_class_name
-                            , "input_object_class_src": self._input_object_class_src
-                            , "input_object_uuid": self._input_object_uuid
-                            , "preposition": self._preposicao
-                            }
+    def send_preposition_to_publisher(self):
+        if self._preposicao is None:
+            raise Exception("'preposition' not defined.")
         
-        return question_packege
-    
+        message = self.send_preposition_protocol(origin_class = self._origin_class
+            , input_object_class = self._input_object_class
+            , input_object_uuid = self._input_object_uuid
+            , content = self._preposicao
+            )
+        
+        app.messages.publisher(message)
+
+
     def get_values_class(self):
         """Converte o data_model em uma nova classe adaptada para receber os valores do enriquecimento de dados e alimenta-los na base."""
 

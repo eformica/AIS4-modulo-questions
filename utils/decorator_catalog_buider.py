@@ -3,20 +3,20 @@ import inspect
 
 class SingletonWithID:
     _instances = {}
-    _datalist = {}
+    _data = {}
 
     def __new__(cls, id, *args, **kwargs):
         if id not in cls._instances.keys():
             cls._instances[id] = super().__new__(cls)
-            cls._datalist[id] = []
+            cls._data[id] = {}
             cls._instances[id].__init__(id, *args, **kwargs)
         return cls._instances[id]
     
-class DecoratorListBuider(SingletonWithID):
+class DecoratorCatalogBuider(SingletonWithID):
 
     def __init__(self, id, enable_self_key_remover=True):
         self.id = id
-        self._dec_list = SingletonWithID._datalist[id]
+        self._data = SingletonWithID._data[id]
         
         if enable_self_key_remover:
             self.config_self_key_remover(True)
@@ -69,7 +69,7 @@ class DecoratorListBuider(SingletonWithID):
             func() #Executa o corpo da funcao quando o decorator é declarado.
 
             def decorator(func):
-                self._dec_list.append(func)
+                self._data[func] = {}
 
                 @functools.wraps(func)
                 def wrapper(*args, **kwargs):
@@ -112,7 +112,7 @@ class DecoratorListBuider(SingletonWithID):
                 #-------------------------------------------------------------------------------
                 
                 def wrapper1(func2):
-                    self._dec_list.append((func2, propertys_to_register))
+                    self._data[func2] = propertys_to_register
 
                     @functools.wraps(func2)
                     def wrapper2(*args, **kwargs):
@@ -122,28 +122,28 @@ class DecoratorListBuider(SingletonWithID):
         
         return decorator
     
-    def get_list(self):
-        return self._dec_list
+    def get_data(self):
+        return self._data
 
         
 if __name__ == "__main__":
 
-    DLB = DecoratorListBuider("TESTE")
-
+    DLB = DecoratorCatalogBuider("TESTE")
+    
     @DLB.create_decorator
     def decorator_com_parametros(a, b, c, d=3, **kwargs):
         """Decorator teste"""
 
-        # Funcao transformada em um decorator de listagem. Os parametros definidos sao usados na definicão dos parametros que o
+        # Funcao transformada em um decorator de catalogação. Os parametros definidos sao usados na definicão dos parametros que o
         # o decorator suporta.
 
         # Se possuir parametros, chamar:
         # @teste(1, b=2, c=3, d=4)
-        # ==> É armazenado na lista uma tupla (funcao, {parametros})
+        # ==> É armazenado uma chave no dict _data[funcao] = {parametros}
 
         # Se nao possuir parametros, chamar apenas:
         # @teste
-        # ==> Neste caso apenas a função decorada entra na lista.
+        # ==> Neste caso o valor armazenado é um dict vazio
 
         # **kwargs pode ser usados como parametro:
         # def teste(a, **kwargs)
@@ -159,22 +159,24 @@ if __name__ == "__main__":
         # O corpo da funcao decorada por 'create_decorator' é executado somente quando o decorator é declarado sobre
         # outra funcao. Isso é util para documentação e validação dos parametros do decorator.
 
-        @decorator_com_parametros(1, 2, d=4, c=3, z="vai para kwargs")
-        def xxx(a, b, c):
-            ...
 
-        print(DLB.get_list())
+    @decorator_com_parametros(1, 2, d=4, c=3, z="vai para kwargs")
+    def xxx(a, b, c):
+        ...
 
-        @DLB.create_decorator
-        def decorator_sem_parametros():
-            "Neste caso apenas a função decorada entra na lista."
 
-        @decorator_sem_parametros
-        def soma(a, b):
-            return a + b
-        
-        print(DLB.get_list())
+    print(DLB.get_data())
 
-        print(soma(2, 3)) # A funcao decorada nao é afetada pelo decorador
+    @DLB.create_decorator
+    def decorator_sem_parametros():
+        "Neste caso apenas a função decorada entra na lista."
 
-        print(DLB.get_list()) # A execucao da funcao decorada nao altera em nada o objeto do DecoratorBuider
+    @decorator_sem_parametros
+    def soma(a, b):
+        return a + b
+    
+    print(DLB.get_data())
+
+    print(soma(2, 3)) # A funcao decorada nao é afetada pelo decorador
+
+    print(DLB.get_data()) # A execucao da funcao decorada nao altera em nada o objeto do DecoratorBuider

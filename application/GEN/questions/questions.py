@@ -1,6 +1,9 @@
+import sys, pathlib
+sys.path.append(str(pathlib.Path(__file__).parents[3]))
+
 from application.app import app
 
-from adapters.tasks_packeges import *
+from adapters.messages.messages_packs import *
 from adapters.GEN.questions_base import Especificacao_da_Resposta, Questao, Repositorio, Tabela, format_text
 
 TopicosParaDesenvolvimento = Repositorio({"nome do topico": Especificacao_da_Resposta(str)
@@ -32,13 +35,14 @@ class Projeto:
 
 @app.add_to_execution_list(trigger_class=Projeto)
 class Ideacao:
-
-    def __init__(self, projeto: Projeto):
+    def __init__(self
+                 , projeto: Projeto):
+        
         self.projeto = projeto
 
     @property
-    def input_object(self): #Mandatorio
-        return self.projeto
+    def input_object(self):
+        return self.projeto 
     
     @property
     def question(self):
@@ -61,14 +65,12 @@ class Ideacao:
                 , origin_class=__class__
                 , input_object=self.input_object
                 , preposicao=preposicao
+                , send_preposition_protocol=LLM_OpenAI_ChatCompletion_Sync
                 , respostas_multiplas = True
                 , agrupar=False
                 )
         
-        return LLM_OpenAI_ChatCompletion_Sync(question)
-    
-    def send_question(self):
-        self.question.send()
+        return question
 
     def register_response(self, response):
         ValuesClass = self.question.get_values_class()

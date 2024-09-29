@@ -1,16 +1,20 @@
 import sys, pathlib
 sys.path.append(str(pathlib.Path(__file__).parents[3]))
 
-from utils.decorator_list_buider import DecoratorListBuider
+from application.core.messages_service_controller import MessagesServiceController
 
-_SetupDLB_ExecutionList = DecoratorListBuider(id="ExecutionController_execution_list")
+from utils.decorator_catalog_buider import DecoratorCatalogBuider
+
+_SetupDLB_ExecutionList = DecoratorCatalogBuider(id="ExecutionController_execution_list")
 
 from typing import Literal
 
 class ExecutionController:
 
     def __init__(self) -> None:
-        self._execution_list = _SetupDLB_ExecutionList.get_list()
+        self._execution_list = _SetupDLB_ExecutionList.get_data()
+
+        self.messages = MessagesServiceController()
     
     @_SetupDLB_ExecutionList.create_decorator
     def add_to_execution_list(self,
@@ -21,19 +25,3 @@ class ExecutionController:
         """Adiciona um modulo de processamento no sistema."""
 
         #TODO: Validacao dos parametros
-
-    def TESTE(self):
-        print("QQQQQQQQQQQQQQQQQQQQQQQQQQQ")
-        print(self._execution_list)
-
-EC = ExecutionController()
-
-@EC.add_to_execution_list()
-class A:
-    ...
-
-@EC.add_to_execution_list()
-class B:
-    ...
-
-print(EC._execution_list)
