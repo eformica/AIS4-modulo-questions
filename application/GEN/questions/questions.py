@@ -36,8 +36,6 @@ class Ideacao:
     def __init__(self, projeto: Projeto):
         self.projeto = projeto
 
-        self.controller = ExecutionController(__class__, self.projeto.uuid)
-
     @property
     def input_object(self): #Mandatorio
         return self.projeto
