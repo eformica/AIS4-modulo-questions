@@ -12,13 +12,13 @@ from typing import Literal
 class ExecutionController:
 
     def __init__(self) -> None:
-        self._execution_list = _SetupDLB_ExecutionList.get_data()
+        self._execution_catalog = _SetupDLB_ExecutionList.get_data()
 
         self.messages = MessagesServiceController()
     
     @_SetupDLB_ExecutionList.create_decorator
-    def add_to_execution_list(self,
-                              trigger_class: list[object] = None,
+    def add_to_execution_catalog(self,
+                              trigger_classes: list[object] = None,
                               dependences: list[object] = None,
                               mode: Literal["prod", "homolog", "dev"] = "prod",
                               ):

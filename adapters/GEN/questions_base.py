@@ -94,7 +94,7 @@ class Questao(BaseInfoModel):
             if not type(send_preposition_protocol) == BaseMessagePack:
                 raise Exception("'send_preposition_protocol' must be a 'BaseMessagePack' type.")
         
-        self.send_preposition_protocol = send_preposition_protocol
+        self._send_preposition_protocol = send_preposition_protocol
 
         self._agrupar = agrupar
 
@@ -102,7 +102,7 @@ class Questao(BaseInfoModel):
         if self._preposicao is None:
             raise Exception("'preposition' not defined.")
         
-        message = self.send_preposition_protocol(origin_class = self._origin_class
+        message = self._send_preposition_protocol(origin_class = self._origin_class
             , input_object_class = self._input_object_class
             , input_object_uuid = self._input_object_uuid
             , content = self._preposicao

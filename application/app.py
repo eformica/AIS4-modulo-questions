@@ -7,4 +7,12 @@ from application.GEN.questions.questions import *
 
 app = ExecutionController()
 
+#Registro dos Listeners:
+
+from application.listeners import listener1
+app.messages.register_listener(listener1.listener, routing_key=None, exchange=None)
+
+
+#----------------------------------------------------------------------------------------------------
+
 print(app._execution_list)

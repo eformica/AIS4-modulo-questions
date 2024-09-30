@@ -21,10 +21,13 @@ class MessagesServiceController:
         self.__durable_exchenge = Settings.RABBITMQ_DURABLE_EXCHANGE #True -> As mensagens sao salvas em disco pelo exchange do RabbitMQ
     
     @_SetupDLB_messagesPacksDict.create_decorator
-    def register_mensage_packs(self
+    def register_message_packs(self
                                , exchange_name: str
                                , routing_key: str):
-        """exchange_name: nome dos tópicos, com cada assunto separado por '.'"""
+        """
+        exchange_name: nome da lista de distribuição
+        routing_key: nome dos tópicos, com cada assunto separado por '.'
+        """
         ...
 
     def publisher(self, message_pack: BaseMessagePack):
@@ -45,3 +48,6 @@ class MessagesServiceController:
                                     , exchange=pack_registred_propertys["routing_key"]
                                     , message=message_pack.content
                                     , headers=message_pack.headers)
+        
+    def register_listener(self, routing_key, exchange):
+        ...

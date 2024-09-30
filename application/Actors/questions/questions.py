@@ -23,7 +23,7 @@ class Espec_Dominio:
 class Espec_Abrangencia:
     ...
 
-@app.add_to_execution_list()
+@app.add_to_execution_catalog()
 class Projeto:
     def __init__(self, tema: str, objetivo: str, especificacoes: str = None, uuid: int|None = None):
         self.uuid = uuid
@@ -33,7 +33,7 @@ class Projeto:
         
         self.enrich_data_models = {}
 
-@app.add_to_execution_list(trigger_class=Projeto)
+@app.add_to_execution_catalog(trigger_classes=[Projeto])
 class Ideacao:
     def __init__(self
                  , projeto: Projeto):
@@ -45,7 +45,7 @@ class Ideacao:
         return self.projeto 
     
     @property
-    def question(self):
+    def core_object(self):
         preposicao = f"Dado o tema '{self.projeto.tema}', proponha idéias para '{self.projeto.objetivo}'."
 
         if self.projeto.especificacoes is not None:
@@ -71,6 +71,28 @@ class Ideacao:
                 )
         
         return question
+    
+    def _on_message_received(self, message: BaseMessagePack):
+        """ 
+        Executado quando o objeto recebe uma mensagem.
+        O tipo da acao pode ser determinado por um condicional, avaliando o protocolo da mensagem.
+        """
+    
+    def _on_dependence_satisfected(self, dependence_class):
+        """ 
+        Executado quando um objeto de 'dependences' comunica que foi satisfeito. Atualiza o status da relação de dependencias.
+        """
+
+    def _on_status_satisfected():
+        """ 
+        Executado quando o objeto é satisfeito. Atualiza o status do objeto.
+        """
+
+    def _on_status_fail():
+        """ 
+        Executado quando o objeto falha em algum processo. Atualiza o status do objeto.
+        """
+
 
     def register_response(self, response):
         ValuesClass = self.question.get_values_class()
