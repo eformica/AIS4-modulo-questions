@@ -9,10 +9,10 @@ class BaseMessagePack(ABC):
     """
 
     def __init__(self
-                 , origin_class: object
-                 , input_object_class: object 
-                 , input_object_uuid: str|int
-                 , content: str|dict
+                 , origin_class: object = None
+                 , input_object_class: object = None
+                 , input_object_uuid: str|int = None
+                 , content: str|dict = None
                  , heders: dict = None
                  ):
         
@@ -23,4 +23,7 @@ class BaseMessagePack(ABC):
         self.headers = heders
 
     def to_dict(self):
+        ...
+
+    def from_dict(self, dict_content: dict):
         ...

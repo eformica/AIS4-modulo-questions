@@ -3,7 +3,9 @@ sys.path.append(str(pathlib.Path(__file__).parents[3]))
 
 from application.app import app
 
-from adapters.messages.messages_packs import *
+from adapters.actors_adapters.questioner_actor_base import QuestionerActorBase
+from adapters.messages.LLM_messages_packs import *
+
 from adapters.GEN.questions_base import Especificacao_da_Resposta, Questao, Repositorio, Tabela, format_text
 
 TopicosParaDesenvolvimento = Repositorio({"nome do topico": Especificacao_da_Resposta(str)
@@ -34,7 +36,7 @@ class Projeto:
         self.enrich_data_models = {}
 
 @app.add_to_execution_catalog(trigger_classes=[Projeto])
-class Ideacao:
+class Ideacao(QuestionerActorBase):
     def __init__(self
                  , projeto: Projeto):
         
@@ -65,37 +67,15 @@ class Ideacao:
                 , origin_class=__class__
                 , input_object=self.input_object
                 , preposicao=preposicao
-                , send_preposition_protocol=LLM_OpenAI_ChatCompletion_Sync
+                , send_preposition_protocol=Request_LLM_OpenAI_ChatCompletion_Sync
                 , respostas_multiplas = True
                 , agrupar=False
                 )
         
         return question
-    
-    def _on_message_received(self, message: BaseMessagePack):
-        """ 
-        Executado quando o objeto recebe uma mensagem.
-        O tipo da acao pode ser determinado por um condicional, avaliando o protocolo da mensagem.
-        """
-    
-    def _on_dependence_satisfected(self, dependence_class):
-        """ 
-        Executado quando um objeto de 'dependences' comunica que foi satisfeito. Atualiza o status da relação de dependencias.
-        """
-
-    def _on_status_satisfected():
-        """ 
-        Executado quando o objeto é satisfeito. Atualiza o status do objeto.
-        """
-
-    def _on_status_fail():
-        """ 
-        Executado quando o objeto falha em algum processo. Atualiza o status do objeto.
-        """
-
 
     def register_response(self, response):
-        ValuesClass = self.question.get_values_class()
+        ValuesClass = self.core_object.get_values_class()
 
         Obj = ValuesClass(response)
 
@@ -157,7 +137,7 @@ class PublicoAlvo:
                                         , preposicao=preposicao
                                         )
         
-        return LLM_OpenAI_ChatCompletion_Sync(AnalisePublicoAlvo)
+        return Request_LLM_OpenAI_ChatCompletion_Sync(AnalisePublicoAlvo)
 
 
     def _AnaliseConcorrencia(self):
@@ -176,7 +156,7 @@ class PublicoAlvo:
                                         , preposicao=preposicao
                                         )
         
-        return LLM_OpenAI_ChatCompletion_Sync(AnaliseConcorrencia)
+        return Request_LLM_OpenAI_ChatCompletion_Sync(AnaliseConcorrencia)
     
 
     def _AnaliseDiferenciais(self):
@@ -193,7 +173,7 @@ class PublicoAlvo:
                     , respostas_multiplas=True
                     , preposicao=preposicao)
         
-        return LLM_OpenAI_ChatCompletion_Sync(Diferenciais)
+        return Request_LLM_OpenAI_ChatCompletion_Sync(Diferenciais)
 
         #     data_model = {"geral": Perguntar(Ideia),
         #     "diferenciais": [Perguntar(Diferenciais, 3)],
