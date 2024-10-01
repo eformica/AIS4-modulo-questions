@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
 
 from adapters.GEN.questions_base import Questao
-from adapters.messages.LLM_messages_packs import *
-from adapters.messages.internal_messages_packs import *
+from adapters.messages_packs.LLM_messages_packs import *
+from adapters.messages_packs.internal_messages_packs import *
 
 from application.app import app
 
@@ -10,13 +10,13 @@ class QuestionerActorBase:
 
     #Metodos abstratos:
 
-    @abstractmethod
     @property
+    @abstractmethod
     def input_object(self) -> object:
         """Deve retornar o objeto de entrada, usado para instanciar a classe.""" 
     
-    @abstractmethod
     @property
+    @abstractmethod
     def core_object(self) -> Questao:
         """Deve retornar o objeto instanciado com a questao a ser formulada."""
 

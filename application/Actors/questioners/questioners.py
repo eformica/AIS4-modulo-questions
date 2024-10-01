@@ -4,7 +4,7 @@ sys.path.append(str(pathlib.Path(__file__).parents[3]))
 from application.app import app
 
 from adapters.actors_adapters.questioner_actor_base import QuestionerActorBase
-from adapters.messages.LLM_messages_packs import *
+from adapters.messages_packs.LLM_messages_packs import *
 
 from adapters.GEN.questions_base import Especificacao_da_Resposta, Questao, Repositorio, Tabela, format_text
 

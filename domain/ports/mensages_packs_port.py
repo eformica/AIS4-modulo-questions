@@ -22,6 +22,9 @@ class BaseMessagePack(ABC):
         self.content = content
         self.headers = heders
 
+    def validate(self):
+        ...
+        
     def to_dict(self):
         ...
 

@@ -108,7 +108,7 @@ class Questao(BaseInfoModel):
             , content = self._preposicao
             )
         
-        app.messages.publisher(message)
+        app.messages.send_to_publisher(message)
 
 
     def get_values_class(self):

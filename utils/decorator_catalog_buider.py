@@ -122,7 +122,7 @@ class DecoratorCatalogBuider(SingletonWithID):
         
         return decorator
     
-    def get_data(self):
+    def get_data(self) -> dict:
         return self._data
 
         
