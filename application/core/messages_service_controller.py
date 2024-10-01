@@ -9,8 +9,6 @@ from domain.ports.mensages_packs_port import BaseMessagePack
 
 import subprocess
 
-from adapters.messages_packs._all import *
-
 _SetupDLB_messagesPacksDict = DecoratorCatalogBuider(id="messagesPackegesList")
 _SetupDLB_messagesListeners = DecoratorCatalogBuider(id="messagesListeners")
 
@@ -18,7 +16,6 @@ class MessagesServiceController:
 
     def __init__(self, durable_exchenge: bool) -> None:
         self._messages_packs = _SetupDLB_messagesPacksDict.get_data()
-
         self._listeners = _SetupDLB_messagesPacksDict.get_data()
 
         self.publisher_service = Publisher()

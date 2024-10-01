@@ -16,14 +16,6 @@ PalavrasChave = Repositorio({"palavra-chave": Especificacao_da_Resposta(str)
                             , "categoria": Especificacao_da_Resposta(str, valores_possiveis=[""])
                             })
 
-class Espec_PalavrasChave:
-    ...
-
-class Espec_Dominio:
-    ...
-
-class Espec_Abrangencia:
-    ...
 
 @app.add_to_execution_catalog()
 class Projeto:
