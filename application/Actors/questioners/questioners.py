@@ -1,7 +1,7 @@
 import sys, pathlib
 sys.path.append(str(pathlib.Path(__file__).parents[3]))
 
-from application.app import app
+from application.app import registry
 
 from adapters.actors_adapters.questioner_actor_base import QuestionerActorBase
 from adapters.messages_packs.LLM_messages_packs import *
@@ -17,7 +17,7 @@ PalavrasChave = Repositorio({"palavra-chave": Especificacao_da_Resposta(str)
                             })
 
 
-@app.add_to_execution_catalog()
+@registry.add_to_execution_catalog()
 class Projeto:
     def __init__(self, tema: str, objetivo: str, especificacoes: str = None, uuid: int|None = None):
         self.uuid = uuid
@@ -27,7 +27,7 @@ class Projeto:
         
         self.enrich_data_models = {}
 
-@app.add_to_execution_catalog(trigger_classes=[Projeto])
+@registry.add_to_execution_catalog(trigger_classes=[Projeto])
 class Ideacao(QuestionerActorBase):
     def __init__(self
                  , projeto: Projeto):

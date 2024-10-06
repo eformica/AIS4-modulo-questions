@@ -4,8 +4,6 @@ from adapters.GEN.questions_base import Questao
 from adapters.messages_packs.LLM_messages_packs import *
 from adapters.messages_packs.internal_messages_packs import *
 
-from application.app import app
-
 class QuestionerActorBase:
 
     #Metodos abstratos:

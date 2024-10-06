@@ -1,4 +1,4 @@
-from application.app import app
+#from application.app import app
 
 from domain.ports.GEN import *
 from domain.ports.mensages_packs_port import BaseMessagePack
@@ -108,7 +108,7 @@ class Questao(BaseInfoModel):
             , content = self._preposicao
             )
         
-        app.messages.send_to_publisher(message)
+#        app.messages.send_to_publisher(message)
 
 
     def get_values_class(self):

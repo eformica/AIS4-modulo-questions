@@ -1,54 +1,39 @@
-version: "3.2"
+# services:
+#   rabbitmq:
+#     image: rabbitmq:3-management-alpine
+#     container_name: 'rabbitmq'
+#     ports:
+#         - 5672:5672
+#         - 15672:15672
+#     volumes:
+#         - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
+#         - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
+#     networks:
+#         - rabbitmq_go_net
 
-# list of containers to be run
+# networks:
+#   rabbitmq_go_net:
+#     driver: bridge
+
 services:
+        rabbitmq:
+               image: rabbitmq:4.0.2-management
+               container_name: rabbitmq_management
+               ports: 
+                - 5672:5672
+                - 25672:25672 # (erlang) communication between the nodes and CLI tool
+                - 15672:15672 # communication with the web management API 
+               volumes:
+                - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
+                - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
+               restart: always
+               networks:
+                - rabbitmq_net
+networks:
+    rabbitmq_net:
+        driver: bridge
 
-  # rabbit_mq container uses the default rabbitmq image
-  # exposes the ports
-  # uses the specified volume
-  rabbit_mq:
-
-    # we use management image to get the
-    # plugin for web dashboard
-    image: rabbitmq:3.8-rc-management
-    container_name: rabbit_mq
-    ports:
-        - '5672:5672'
-        - '15672:15672'
-    volumes:
-      - rabbit_mqdata:/usr/share/rabbitmq/data
-
-  # # produces container builds the producer image
-  # # and produces message to the queue
-  # producer:
-  #   build: producer
-  #   depends_on:
-  #       - rabbit_mq
-  #   environment:
-  #       AMQP_URL: 'amqp://rabbit_mq?connection_attempts=10&retry_delay=10'
-  #   volumes:
-  #     - ./producer:/usr/src/app/producer
-
-  # # consumer container builds the consumer image
-  # # and consumes messages from the queue
-  # # we spawn 2 consumer containers to run parallely
-  # # on the same queue
-  # consumer1:
-  #   build: consumer
-  #   depends_on:
-  #       - rabbit_mq
-  #   environment:
-  #       AMQP_URL: 'amqp://rabbit_mq?connection_attempts=10&retry_delay=10'
-  #   volumes:
-  #     - ./consumer:/usr/src/app/consumer
-  # consumer2:
-  #   build: consumer
-  #   depends_on:
-  #       - rabbit_mq
-  #   environment:
-  #       AMQP_URL: 'amqp://rabbit_mq?connection_attempts=10&retry_delay=10'
-  #   volumes:
-  #     - ./consumer:/usr/src/app/consumer
-volumes:
-    rabbit_mqdata:
-      driver: local
+# volumes:
+#     logs-folder:
+#         name: ${log_rabbitmq_management}
+#         driver: local

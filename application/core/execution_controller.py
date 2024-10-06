@@ -1,45 +1,46 @@
 import sys, pathlib
-sys.path.append(str(pathlib.Path(__file__).parents[3]))
+sys.path.append(str(pathlib.Path(__file__).parents[2]))
 
 from config import Settings
-#from application.core.messages_service_controller import MessagesServiceController
 
-from utils.decorator_catalog_buider import DecoratorCatalogBuider
+from application.core.registry import get_registry
 
-from typing import Literal
-
-_SetupDLB_ExecutionList = DecoratorCatalogBuider(id="ExecutionController_execution_list")
-
-_SetupDLB_messagesPacksDict = DecoratorCatalogBuider(id="messagesPackegesList")
-_SetupDLB_messagesListeners = DecoratorCatalogBuider(id="messagesListeners")
-
+from application.core.messages_service_controller import MessagesServiceController
 
 class ExecutionController:
 
     def __init__(self) -> None:
-        self._execution_catalog = _SetupDLB_ExecutionList.get_data()
+        self.registry = get_registry()
 
-        self._messages_packs = _SetupDLB_messagesPacksDict.get_data()
-        self._listeners = _SetupDLB_messagesPacksDict.get_data()
+        self.messages: MessagesServiceController = MessagesServiceController(
+            registry = self.registry,
+            durable_exchenge=Settings.RABBITMQ_DURABLE_EXCHANGE)
+        
+    def address(self, obj):
+        if type(obj) == dict:
+            ...
 
-#        self.messages = MessagesServiceController(durable_exchenge=Settings.RABBITMQ_DURABLE_EXCHANGE)
-    
-    @_SetupDLB_ExecutionList.create_decorator
-    def add_to_execution_catalog(self,
-                              trigger_classes: list[object] = None,
-                              dependences: list[object] = None,
-                              mode: Literal["prod", "homolog", "dev"] = "prod",
-                              ):
-        """Adiciona um modulo de processamento no sistema."""
+        elif type(obj) == list:
+            ...
+            # for k in obj:
+            #     self.address(k)
 
-        #TODO: Validacao dos parametros
+        else:
+            catalog, propertys = self.registry.get_object_propertys(obj)
 
-    @_SetupDLB_messagesPacksDict.create_decorator
-    def register_message_packs(self
-                               , exchange_name: str
-                               , routing_key: str):
-        """
-        exchange_name: nome da lista de distribuição
-        routing_key: nome dos tópicos, com cada assunto separado por '.'
-        """
-        ...
+            if catalog == "messages_packs":
+                self.messages.send_to_publisher(obj, propertys)
+
+            else:
+                ...
+
+#----------------------
+
+if __name__ == "__main__":
+    ec = ExecutionController()
+
+    from adapters.messages_packs.internal_messages_packs import Internal_Generic_Message
+
+    msg = Internal_Generic_Message(content={"teste": "abc"}, headers={"header": "OK"})
+
+    ec.address(msg)

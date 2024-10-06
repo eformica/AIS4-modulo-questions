@@ -1,12 +1,13 @@
-from application.app import app
+class RegistryDict(dict):
+    def get_class_by_name(self, catalog, class_name):
+        for k, v in self[catalog].items():
+            if k.__name__ == class_name:
+                return (k, v)
+        raise Exception(f"Classe '{class_name}' não encontrada no catálogo '{catalog}'.")
+    
 
-import argparse
+X = RegistryDict()
 
-def saudacao(nome):
-    print(f"Olá, {nome}!")
+X["teste"] = {RegistryDict: {"": ""}}
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Um simples script de saudação')
-    parser.add_argument("nome", help="O nome da pessoa a ser saudada")
-    args = parser.parse_args()
-    saudacao(args.nome)
+print(X.get_class_by_name("teste", "RegistryDict"))
