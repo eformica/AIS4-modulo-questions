@@ -30,8 +30,7 @@ if __name__ == "__main__":
 
     from application.Actors.questioners.questioners import *
     from adapters.messages_packs.internal_messages_packs import *
-    from application.listeners.listener2 import Listener2
-    from application.listeners.listener1 import Listener1
+    from application.listeners.listener3 import Listener3
 
     registry.save()
 

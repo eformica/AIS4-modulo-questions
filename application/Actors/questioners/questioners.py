@@ -51,7 +51,7 @@ class Ideacao(QuestionerActorBase):
                 , "exposição do problema": Especificacao_da_Resposta(str)
                 , "importancia": Especificacao_da_Resposta(str)
                 , "tópicos para desenvolvimento": TopicosParaDesenvolvimento
-                , "palavras-chave para busca": [Especificacao_da_Resposta(str, classe=Espec_PalavrasChave)]
+                , "palavras-chave para busca": [Especificacao_da_Resposta(str, classe=PalavrasChave)]
                 , "dominio": [Especificacao_da_Resposta(str)]
                 , "abrangencia": [Especificacao_da_Resposta(str)]
                 , "categoria do objetivo": Especificacao_da_Resposta(str, valores_possiveis=["Desenvolvimento de Negócio", "Desenvolvimento Tecnológico", "Trabalho Acadêmico"])

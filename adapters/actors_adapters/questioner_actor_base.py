@@ -61,7 +61,7 @@ class QuestionerActorBase:
 
     def on_processing(self):
         """ 
-        Executado quando o objeto é satisfeito. Deve atualizar o status do objeto.
+        Executado quando o objeto está em status on_processing. Deve atualizar o status do objeto.
         """
 
     def on_satisfected(self):

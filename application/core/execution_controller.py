@@ -7,6 +7,8 @@ from application.core.registry import get_registry
 
 from application.core.messages_service_controller import MessagesServiceController
 
+import dill as pickle
+
 class ExecutionController:
 
     def __init__(self) -> None:
@@ -29,18 +31,27 @@ class ExecutionController:
             catalog, propertys = self.registry.get_object_propertys(obj)
 
             if catalog == "messages_packs":
-                self.messages.send_to_publisher(obj, propertys)
+
+                try:
+                    self.messages.send_to_publisher(obj, propertys)
+                
+                except:
+                    obj.content = pickle.dumps(obj.content)
+
+                    obj.headers["pickle_dumps"] = True
+
+                    self.messages.send_to_publisher(obj, propertys)
 
             else:
                 ...
 
 #----------------------
 
-if __name__ == "__main__":
-    ec = ExecutionController()
+# if __name__ == "__main__":
+#     ec = ExecutionController()
 
-    from adapters.messages_packs.internal_messages_packs import Internal_Generic_Message
+#     from adapters.messages_packs.internal_messages_packs import Internal_Generic_Message
 
-    msg = Internal_Generic_Message(content={"teste": "abc"}, headers={"header": "OK"})
+#     msg = Internal_Generic_Message(content={"teste": "abc"}, headers={"header": "OK"})
 
-    ec.address(msg)
+#     ec.address(msg)

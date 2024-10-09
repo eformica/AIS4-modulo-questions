@@ -13,14 +13,20 @@ class BaseMessagePack:
                  , input_object_class: object = None
                  , input_object_uuid: str|int = None
                  , content: str|dict = None
-                 , headers: dict = None
+                 , headers: dict = dict()
                  ):
         
-        self.origin_class = origin_class
-        self.input_object_class = input_object_class 
-        self.input_object_uuid = input_object_uuid
         self.content = content
         self.headers = headers
+
+        if origin_class:
+            self.headers["origin_class"] = origin_class
+        
+        if input_object_class:
+            self.headers["input_object_class"] = input_object_class
+        
+        if input_object_uuid:
+            self.headers["input_object_uuid"] = input_object_uuid
 
     def validate(self):
         ...
