@@ -17,7 +17,7 @@ class ExecutionController:
         self.messages: MessagesServiceController = MessagesServiceController(
             registry = self.registry,
             durable_exchenge=Settings.RABBITMQ_DURABLE_EXCHANGE)
-        
+                
     def address(self, obj):
         if type(obj) == dict:
             ...
@@ -31,16 +31,7 @@ class ExecutionController:
             catalog, propertys = self.registry.get_object_propertys(obj)
 
             if catalog == "messages_packs":
-
-                try:
-                    self.messages.send_to_publisher(obj, propertys)
-                
-                except:
-                    obj.content = pickle.dumps(obj.content)
-
-                    obj.headers["pickle_dumps"] = True
-
-                    self.messages.send_to_publisher(obj, propertys)
+                self.messages.send_to_publisher(obj, propertys)
 
             else:
                 ...

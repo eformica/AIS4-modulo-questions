@@ -20,10 +20,10 @@ class BaseMessagePack:
         self.headers = headers
 
         if origin_class:
-            self.headers["origin_class"] = origin_class
+            self.headers["origin_class"] = origin_class.__name__
         
         if input_object_class:
-            self.headers["input_object_class"] = input_object_class
+            self.headers["input_object_class"] = input_object_class.__name__
         
         if input_object_uuid:
             self.headers["input_object_uuid"] = input_object_uuid
