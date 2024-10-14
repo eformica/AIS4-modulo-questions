@@ -21,15 +21,15 @@ class RegistryDict(dict):
 
         return (obj_catalog, obj_propertys)
     
-_SetupDLB_RegistryCatalog = DecoratorCatalogBuider(id="registry_catalog", dict_class=RegistryDict)
+_SetupDCB_RegistryCatalog = DecoratorCatalogBuider(id="registry_catalog", dict_class=RegistryDict)
 
 registry_file_path = "components_registry.pickle"
 
 class RegistryController:
     def __init__(self) -> None:
-        self._registry = _SetupDLB_RegistryCatalog.get_data()
+        self._registry = _SetupDCB_RegistryCatalog.get_data()
 
-    @_SetupDLB_RegistryCatalog.create_decorator("actors")
+    @_SetupDCB_RegistryCatalog.create_decorator("actors")
     def add_to_execution_catalog(self,
                               trigger_classes: list[object] = None,
                               dependences: list[object] = None,
@@ -39,7 +39,7 @@ class RegistryController:
 
         #TODO: Validacao dos parametros
 
-    @_SetupDLB_RegistryCatalog.create_decorator("messages_packs")
+    @_SetupDCB_RegistryCatalog.create_decorator("messages_packs")
     def register_message_packs(self
                                , exchange_name: str
                                , routing_key: str\
@@ -50,7 +50,7 @@ class RegistryController:
         """
         ...
 
-    @_SetupDLB_RegistryCatalog.create_decorator("listeners")
+    @_SetupDCB_RegistryCatalog.create_decorator("listeners")
     def register_listener(self
                         , exchange_name: str
                         , binding_keys: str|list = "#"

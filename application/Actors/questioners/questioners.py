@@ -3,20 +3,13 @@ sys.path.append(str(pathlib.Path(__file__).parents[3]))
 
 from application.app import registry
 
-from adapters.actors_adapters.questioner_actor_base import QuestionerActorBase
+from adapters.actors_adapters.questioner_actor_base import QuestionerBase
 from adapters.messages_packs.LLM_messages_packs import *
 
-from adapters.GEN.questions_base import Especificacao_da_Resposta, Question, Repositorio
-
-# TopicosParaDesenvolvimento = Repositorio({"nome do topico": Especificacao_da_Resposta(str)
-#                                        , "categoria": Especificacao_da_Resposta(str, valores_possiveis=[""])
-#                                        })
-
-# PalavrasChave = Repositorio({"palavra-chave": Especificacao_da_Resposta(str)
-#                             , "categoria": Especificacao_da_Resposta(str, valores_possiveis=[""])
-#                             })
+from adapters.GEN.questions_base import Especificacao_da_Resposta, Question
 
 from neomodel import StringProperty, StructuredNode
+
 
 @registry.add_to_execution_catalog()
 class Projeto(StructuredNode):
@@ -33,27 +26,21 @@ class Projeto(StructuredNode):
 
 
 @registry.add_to_execution_catalog(trigger_classes=[Projeto])
-class Ideacao(QuestionerActorBase):
-    def __init__(self
+class Ideacao(QuestionerBase):
+    def start(self
                  , projeto: Projeto):
         
         self.projeto = projeto
 
-        super().__init__()
-
-    @property
-    def input_object(self):
-        return self.projeto 
-    
-    @property
-    def core_object(self):
-        preposicao = f"Dado o tema '{self.projeto.tema}', proponha idéias para '{self.projeto.objetivo}'."
+    @QuestionerBase.add_step
+    def _step1(self):
+        preposition = f"Dado o tema '{self.projeto.tema}', proponha idéias para '{self.projeto.objetivo}'."
 
         if self.projeto.especificacoes is not None:
-            preposicao += f" Considere as seguintes especificações: '{self.projeto.especificacoes}'."
+            preposition += f" Considere as seguintes especificações: '{self.projeto.especificacoes}'."
 
-        question = Question(
-                {"nome da ideia": Especificacao_da_Resposta(str)
+        quest = Question(title="Ideação Inicial"
+                , data_model={"nome da ideia": Especificacao_da_Resposta(str)
                 , "descrição": Especificacao_da_Resposta(str) 
                 , "exposição do problema": Especificacao_da_Resposta(str)
                 , "importancia": Especificacao_da_Resposta(str)
@@ -63,15 +50,19 @@ class Ideacao(QuestionerActorBase):
                 , "abrangencia": [Especificacao_da_Resposta(str, index=True)]
                 , "categoria do objetivo": Especificacao_da_Resposta(str, valores_possiveis=["Desenvolvimento de Negócio", "Desenvolvimento Tecnológico", "Trabalho Acadêmico"])
                 }
-                , origin_class=__class__
-                , input_object=self.input_object
-                , preposicao=preposicao
+                , origin_class=self.projeto.__class__
+                , input_object=self.projeto
+                , preposition=preposition
                 , send_preposition_protocol=Request_LLM_OpenAI_ChatCompletion_Sync
-                , respostas_multiplas = True
-                , agrupar=False
+                , multiple_responses=True
+                , group_in_the_same_node=False
                 )
         
-        return question
+        quest.config_response_adapter(title="nome da ideia",
+                              keywords="palavras-chave para busca",
+                              domain="dominio")
+        
+        return quest
 
 
 

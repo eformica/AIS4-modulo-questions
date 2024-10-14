@@ -1,13 +1,28 @@
-class RegistryDict(dict):
-    def get_class_by_name(self, catalog, class_name):
-        for k, v in self[catalog].items():
-            if k.__name__ == class_name:
-                return (k, v)
-        raise Exception(f"Classe '{class_name}' não encontrada no catálogo '{catalog}'.")
+import inspect
+
+class BaseTeste:
+    def f0(func):
+        def wrapper(*args, **kwargs):
+            print(func)
+            return func(*args, **kwargs)
+        return wrapper
+
+class Teste(BaseTeste):
+    x = 1
     
+    @BaseTeste.f0
+    def f1(self):
+        ...
 
-X = RegistryDict()
+x = Teste()
 
-X["teste"] = {RegistryDict: {"": ""}}
+import inspect
 
-print(X.get_class_by_name("teste", "RegistryDict"))
+def get_class_name(func):
+    for name, member in inspect.getmembers(func):
+        print(name, member)
+        if isinstance(member, type):
+            return member.__name__
+    return None
+
+print(get_class_name(Teste.f1))

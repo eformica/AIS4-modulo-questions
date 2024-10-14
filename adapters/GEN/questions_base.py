@@ -21,6 +21,7 @@ class Especificacao_da_Resposta:
                  , observacoes: str = None
                  , valores_possiveis: list = None
                  , **kwargs):
+        
         self.tipo = tipo
         self.classe = classe
         self.obsevacoes = observacoes
@@ -142,7 +143,7 @@ class Question(BaseInfoModel):
     #---------------------------------------------------------------------------------------------------
     #Envia a pergunta
 
-    def preposition_to_publisher(self):
+    def send_preposition_to_publisher(self):
         if self._preposition is None:
             raise Exception("'preposition' not defined.")
         
@@ -157,6 +158,10 @@ class Question(BaseInfoModel):
             , input_object_uuid = self._input_object_uuid
             , content = self._preposition
             )
+        
+        from application.core.execution_controller import ExecutionController
+        EC = ExecutionController()
+        EC.address(message)
         
         return message
     
