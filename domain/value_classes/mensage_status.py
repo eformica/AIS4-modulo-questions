@@ -11,3 +11,4 @@ class StatusProcessado(Status):
 
 class StatusErro(Exception, Status):
     ...
+

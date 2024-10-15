@@ -14,13 +14,23 @@ def decorator_factory(id):
             
             return wrapper
         
+        def to_dict(self, cls):
+            res = {}
+            for k in dir(cls):
+
+                if "_mark_id" in dir(eval(f'cls.{k}')):
+                    if eval(f'cls.{k}._mark_id') == __class__.__mark_id:
+                        res[k] = eval(f'cls.{k}')
+
+            return res
+
         def to_list(self, cls):
             res = []
             for k in dir(cls):
 
                 if "_mark_id" in dir(eval(f'cls.{k}')):
                     if eval(f'cls.{k}._mark_id') == __class__.__mark_id:
-                        res.append((k, eval(f'cls.{k}')))
+                        res.append(eval(f'cls.{k}'))
 
             return res
         

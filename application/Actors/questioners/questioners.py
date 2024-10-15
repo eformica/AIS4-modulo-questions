@@ -27,11 +27,14 @@ class Projeto(StructuredNode):
 
 @registry.add_to_execution_catalog(trigger_classes=[Projeto])
 class Ideacao(QuestionerBase):
+
+    "Processo inicial de geração de ideias para o projeto." #Docstring será usada para criação de indice
+
     def start(self
                  , projeto: Projeto):
         
         self.projeto = projeto
-
+    
     @QuestionerBase.add_step
     def _step1(self):
         preposition = f"Dado o tema '{self.projeto.tema}', proponha idéias para '{self.projeto.objetivo}'."
@@ -63,8 +66,6 @@ class Ideacao(QuestionerBase):
                               domain="dominio")
         
         return quest
-
-
 
 
 #print(app._execution_list)

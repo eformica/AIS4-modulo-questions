@@ -65,7 +65,8 @@ class Question(BaseInfoModel):
                  , data_model: dict
                  , origin_class: str
                  , input_object: object
-                 , preposition: str = None
+                 , preposition: str
+                 , question_reason: str
                  , send_preposition_protocol: BaseMessagePack = None
                  , multiple_responses: bool = True
                  , group_in_the_same_node: bool = False
@@ -85,19 +86,16 @@ class Question(BaseInfoModel):
 
         self._multiple_responses = multiple_responses
 
-        if preposition is not None: 
+        self._group_in_the_same_node = group_in_the_same_node
 
-            if multiple_responses == True:
-                self._group_in_the_same_node = group_in_the_same_node
-                data_model_preposicao = {"results": [self._data_model, ]}
-                self._preposition = preposition + f" Retorne o resultado em uma lista JSON conforme o seguinte modelo de dados: {data_model_preposicao}"
-            else:
-                self._group_in_the_same_node = None
-                self._preposition = preposition + f" Retorne o resultado em JSON conforme o seguinte modelo de dados: {self._data_model}"
+        self._question_reason = question_reason
 
-        else:
-            if not type(send_preposition_protocol) == BaseMessagePack:
-                raise Exception("'send_preposition_protocol' must be a 'BaseMessagePack' type.")
+        self._preposition = preposition
+
+        self._prep_preposition()
+
+        if not type(send_preposition_protocol) == BaseMessagePack:
+            raise Exception("'send_preposition_protocol' must be a 'BaseMessagePack' type.")
         
         self._send_preposition_protocol = send_preposition_protocol
 
@@ -115,12 +113,47 @@ class Question(BaseInfoModel):
                                   "keywords": keywords,
                                   "domain": domain}
 
+    def _prep_preposition(self):
+
+        #TODO Adicoes no data_model:
+        avaliacao_pergunta = {"Adequação da pergunta, dado o propósito da pergunta informado": Especificacao_da_Resposta(int, valores_possiveis=[
+                                    "3: OK"
+                                    , "2: Pergunta genérica, inespecífica ou pouco relevante"
+                                    , "1: Pergunta inválida ou sarcástica"] )
+                              , "Relevancia da pergunta": Especificacao_da_Resposta(int, valores_possiveis=[
+                                    "3: Pergunta muito relevante para o objetivo"
+                                    , "2: Pergunta de relevância média"
+                                    , "1: Pergunta inválida ou irrelevante"])
+                                }
+        
+        avaliacao_resposta = {"Relevância da resposta, dado o objetivo informado": Especificacao_da_Resposta(int, valores_possiveis=[
+                                    "3: Relevância alta"
+                                    , "2: Relevância média"
+                                    , "2: Relevância baixa"] )
+                              , "Confiança da resposta": Especificacao_da_Resposta(int, valores_possiveis=[
+                                    "3: Alta"
+                                    , "2: Média"
+                                    , "1: Baixa"])
+                                }
+        
+        #Adicoes na preposicao:
+
+        self._preposition += " Considere o seguinte propósito da pergunta: " + self._question_reason
+
+        if self._multiple_responses == True:
+            data_model_preposicao = {"results": [self._data_model, ]}
+            self._preposition += f" Retorne o resultado em uma lista JSON conforme o seguinte modelo de dados: {data_model_preposicao}"
+        else:
+            self._group_in_the_same_node = None
+            self._preposition += f" Retorne o resultado em JSON conforme o seguinte modelo de dados: {self._data_model}"
+
+
     #---------------------------------------------------------------------------------------------------
     #Registra a pergunta
 
-    def save_request(self, status):
+    def start_request(self):
 
-        node = QuestionRequest(
+        self._node_request = QuestionRequest(
             uuid_user = self.uuid_user
             , title = self.title
             , preposition = self._preposition
@@ -129,23 +162,24 @@ class Question(BaseInfoModel):
             , group_in_the_same_node = self._group_in_the_same_node
 
             , response_adapter = self._response_adapter
-            , status = status
+            , status = 0
             , send_method = str(self._send_preposition_protocol)
             , llm_model = None
             )
         
-        node.save()
+        if self._node_request.save():
 
-        self.uuid_request = node.uuid
+            self.uuid_request = self._node_request.uuid
 
-        return node.uuid
+            return self._node_request.uuid
+        
+        else:
+            return False
     
     #---------------------------------------------------------------------------------------------------
     #Envia a pergunta
 
     def send_preposition_to_publisher(self):
-        if self._preposition is None:
-            raise Exception("'preposition' not defined.")
         
         if self.uuid_request is None:
             raise Exception("'uuid_request' not defined. Use method 'save_request' to get this.")
@@ -161,8 +195,16 @@ class Question(BaseInfoModel):
         
         from application.core.execution_controller import ExecutionController
         EC = ExecutionController()
-        EC.address(message)
         
+        resp = EC.address(message)
+        
+        #Atualiza o status:
+        #TODO: multiplas tentativas e tratamento da resposta do endereçamento
+
+        self._node_request["status"] = 1 #Enviado (aguardando resposta)
+
+        self._node_request.save()
+
         return message
     
     #---------------------------------------------------------------------------------------------------
@@ -253,11 +295,3 @@ class Question(BaseInfoModel):
     
     def __repr__(self) -> str:
         return str(self._data_model)
-
-
-class Repositorio:
-    def __init__(self, base_model: BaseInfoModel):
-        self.base_model = base_model
-
-    def __repr__(self) -> str:
-        return str(self.base_model.data_model)

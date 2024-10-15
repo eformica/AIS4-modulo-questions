@@ -12,12 +12,27 @@ from adapters.messages_packs.internal_messages_packs import *
 from application.core.execution_controller import ExecutionController
 
 from utils.decorator_catalog_builder_multi import decorator_factory
+from domain.graph_models.questioners import NodeQuestioner
+from adapters.GEN.questions_base import Question
 
+from domain.value_classes.nodes_status import STATUS
+
+# class StepOperator:
+#     """Interface para a operação dos Steps (Questions ou outros objetos de retorno)."""
+
+#     def __init__(self, obj):
+#         self.obj = obj
+
+#     def 
+    
 class QuestionerBase:
     add_step = decorator_factory("steps")
 
     def __init__(self):
         self._steps = __class__.add_step.to_list(self.__class__)
+        
+        self.uuid_node = None
+        self._node = None
 
     @abstractmethod
     def start(self, objeto_exemplo, **kwargs) -> None:
@@ -30,12 +45,79 @@ class QuestionerBase:
         """
 
     def _register_node(self):
-        ...
 
-
-    def execute(self):
+        #Status inicial dos steps:
+        status_steps = []
         for k in self._steps:
-            print(k)
+            status_steps.append({"func": k.__name__, "status": STATUS.NOT_INITIALIZED.value})
+
+        self._node = NodeQuestioner(
+            status_steps = status_steps
+            , questioner_status = 1
+        )
+
+        if self._node.save():
+            self.uuid_node = self._node.uuid
+        
+
+    def _start_question(self, n_step: int, func_name: str, question: Question):
+        request_uuid = question.start_request()
+        
+        if request_uuid:
+            self._node["status_steps"][n_step] = {"func": func_name, "status": STATUS.CREATED.value, "uuid_request": request_uuid}
+            self._node.save()
+
+            #TODO: Criar relacionamento entre o node do questioner e das perguntas
+        else:
+            raise Exception(f"Failed to create question request node. Step {n_step} [{func_name}].")
+
+        if question.send_preposition_to_publisher():
+            self._node["status_steps"][n_step] = {"func": func_name, "status": STATUS.MESSAGE_SENT.value, "uuid_request": request_uuid}
+            self._node.save()
+        else:
+            #TODO: atualizar status em caso de falha no envio da mensagem.
+            ...
+        
+        return True
+    
+    def execute(self):
+
+        if self._node is None:
+            self._register_node()
+        
+        for n, item in enumerate(self._node["status_steps"]): #cada item de status steps é um dict com as chaves "status" e "func"
+            if item["status"] == 0: #Node da pergunta nao criado
+                if self._start_question(n, self._steps[n].__name__, self._steps[n]()):
+                    self._node.questioner_status = STATUS.PROCESSING.value
+                    self._node.save()
+
+                else:
+                    self._node.questioner_status = STATUS.ERROR_GENERIC_FAILURE.value
+                    self._node.save()
+
+                break
+
+            elif item["status"] == 9: #Step concluido
+                continue
+
+            elif (item["status"] < 9) and (item["status"] > 0): #Processando
+                break
+
+            elif (item["status"] >= 50) and (item["status"] < 60): #Falha no processo (realizar nova tentiva)
+                #Tenta novamente:
+                if self._start_question(n, self._steps[n].__name__, self._steps[n]()):
+                    self._node.questioner_status = STATUS.PROCESSING.value
+                    self._node.save()
+                else:
+                    self._node.questioner_status = STATUS.ERROR_GENERIC_FAILURE.value
+                    self._node.save()
+                break
+
+            elif (item["status"] >= 90) and (item["status"] < 100): #Processo encerrado com erro terminal
+                break
+
+            else:
+                Exception(f"Status code '{item["status"]}' not implanted.")
 
     
 
@@ -50,6 +132,13 @@ class Q1(QuestionerBase):
     def step1(self, projeto):
         pass
 
+    @QuestionerBase.add_step
+    def step2(self, projeto):
+        pass
+
+X = Q1("")
+
+print(X._steps)
 
 
 # class QuestionerActorBase:
