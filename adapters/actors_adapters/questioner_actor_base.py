@@ -47,12 +47,13 @@ class QuestionerBase:
     def _register_node(self):
 
         #Status inicial dos steps:
-        status_steps = []
+        steps_status = []
         for k in self._steps:
-            status_steps.append({"func": k.__name__, "status": STATUS.NOT_INITIALIZED.value})
+            steps_status.append({"func": k.__name__, "status": STATUS.NOT_INITIALIZED.value})
 
         self._node = NodeQuestioner(
-            status_steps = status_steps
+            uuid_user = self.uuid_user
+            , steps_status = steps_status
             , questioner_status = 1
         )
 
@@ -61,18 +62,18 @@ class QuestionerBase:
         
 
     def _start_question(self, n_step: int, func_name: str, question: Question):
-        request_uuid = question.start_request()
+        request_node = question.start_request()
         
-        if request_uuid:
-            self._node["status_steps"][n_step] = {"func": func_name, "status": STATUS.CREATED.value, "uuid_request": request_uuid}
+        if request_node:
+            self._node.steps_status[n_step] = {"func": func_name, "status": STATUS.CREATED.value, "uuid_request": request_node.uuid}
+            self._node.questions.connect(request_node, {"order": n_step, "func_name": func_name})
             self._node.save()
 
-            #TODO: Criar relacionamento entre o node do questioner e das perguntas
         else:
             raise Exception(f"Failed to create question request node. Step {n_step} [{func_name}].")
 
         if question.send_preposition_to_publisher():
-            self._node["status_steps"][n_step] = {"func": func_name, "status": STATUS.MESSAGE_SENT.value, "uuid_request": request_uuid}
+            self._node.steps_status[n_step] = {"func": func_name, "status": STATUS.MESSAGE_SENT.value, "uuid_request": request_node.uuid}
             self._node.save()
         else:
             #TODO: atualizar status em caso de falha no envio da mensagem.
@@ -85,9 +86,9 @@ class QuestionerBase:
         if self._node is None:
             self._register_node()
         
-        for n, item in enumerate(self._node["status_steps"]): #cada item de status steps é um dict com as chaves "status" e "func"
+        for n, item in enumerate(self._node.steps_status): #cada item de status steps é um dict com as chaves "status" e "func"
             if item["status"] == 0: #Node da pergunta nao criado
-                if self._start_question(n, self._steps[n].__name__, self._steps[n]()):
+                if self._start_question(n, self._steps[n].__name__, self._steps[n](self)):
                     self._node.questioner_status = STATUS.PROCESSING.value
                     self._node.save()
 
@@ -119,26 +120,6 @@ class QuestionerBase:
             else:
                 Exception(f"Status code '{item["status"]}' not implanted.")
 
-    
-
-class Q1(QuestionerBase):
-
-    def __init__(self, projeto):
-        self.projeto = projeto
-
-        super().__init__()
-
-    @QuestionerBase.add_step
-    def step1(self, projeto):
-        pass
-
-    @QuestionerBase.add_step
-    def step2(self, projeto):
-        pass
-
-X = Q1("")
-
-print(X._steps)
 
 
 # class QuestionerActorBase:

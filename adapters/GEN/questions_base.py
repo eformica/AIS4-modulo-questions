@@ -94,8 +94,8 @@ class Question(BaseInfoModel):
 
         self._prep_preposition()
 
-        if not type(send_preposition_protocol) == BaseMessagePack:
-            raise Exception("'send_preposition_protocol' must be a 'BaseMessagePack' type.")
+        # if not type(send_preposition_protocol) == BaseMessagePack:
+        #     raise Exception(f"'send_preposition_protocol' must be a 'BaseMessagePack' type. [{}]")
         
         self._send_preposition_protocol = send_preposition_protocol
 
@@ -171,7 +171,7 @@ class Question(BaseInfoModel):
 
             self.uuid_request = self._node_request.uuid
 
-            return self._node_request.uuid
+            return self._node_request
         
         else:
             return False
@@ -201,7 +201,7 @@ class Question(BaseInfoModel):
         #Atualiza o status:
         #TODO: multiplas tentativas e tratamento da resposta do endereçamento
 
-        self._node_request["status"] = 1 #Enviado (aguardando resposta)
+        self._node_request.status = 1 #Enviado (aguardando resposta)
 
         self._node_request.save()
 

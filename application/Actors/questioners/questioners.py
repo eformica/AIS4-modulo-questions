@@ -11,7 +11,7 @@ from adapters.GEN.questions_base import Especificacao_da_Resposta, Question
 from neomodel import StringProperty, StructuredNode
 
 
-@registry.add_to_execution_catalog()
+#@registry.add_to_execution_catalog()
 class Projeto(StructuredNode):
     uuid_user = StringProperty(index=True)
     uuid = StringProperty(index=True)
@@ -31,8 +31,10 @@ class Ideacao(QuestionerBase):
     "Processo inicial de geração de ideias para o projeto." #Docstring será usada para criação de indice
 
     def start(self
+                 , uuid_user: str
                  , projeto: Projeto):
         
+        self.uuid_user = uuid_user
         self.projeto = projeto
     
     @QuestionerBase.add_step
@@ -43,6 +45,7 @@ class Ideacao(QuestionerBase):
             preposition += f" Considere as seguintes especificações: '{self.projeto.especificacoes}'."
 
         quest = Question(title="Ideação Inicial"
+                , question_reason="Levantamento inicial de ideias para desenvolvimento do projeto."
                 , data_model={"nome da ideia": Especificacao_da_Resposta(str)
                 , "descrição": Especificacao_da_Resposta(str) 
                 , "exposição do problema": Especificacao_da_Resposta(str)
