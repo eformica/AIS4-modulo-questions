@@ -36,6 +36,10 @@ class NodeQuestioner(BaseNode):
 #    input_classes = ArrayProperty()
 #    input_uuids = ArrayProperty()
 
+    __abstract_node__ = True
+
+    class_name = StringProperty(required=True, index=True)
+
     steps_status = JSONProperty(required=True)
 
     questioner_status = IntegerProperty(required=True)
@@ -44,6 +48,14 @@ class NodeQuestioner(BaseNode):
 
     questions = Relationship(QuestionRequest, "QuestionStep", model=RelQuestionStep)
 
-#db.drop_constraints()
-#db.drop_indexes()
-#db.install_all_labels()
+def create_node_questioner(class_name):
+    res = type(class_name, (NodeQuestioner,), {})
+
+    res.__optional_labels__ = ["Questioner"]
+
+    return res
+
+if __name__ == "__main__":
+    db.drop_constraints()
+    db.drop_indexes()
+    db.install_all_labels()

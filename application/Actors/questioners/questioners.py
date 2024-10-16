@@ -70,7 +70,6 @@ class Ideacao(QuestionerBase):
         
         return quest
 
-
 #print(app._execution_list)
     
 

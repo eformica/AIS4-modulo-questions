@@ -12,7 +12,7 @@ from adapters.messages_packs.internal_messages_packs import *
 from application.core.execution_controller import ExecutionController
 
 from utils.decorator_catalog_builder_multi import decorator_factory
-from domain.graph_models.questioners import NodeQuestioner
+from domain.graph_models.questioners import NodeQuestioner, create_node_questioner
 from adapters.GEN.questions_base import Question
 
 from domain.value_classes.nodes_status import STATUS
@@ -51,8 +51,11 @@ class QuestionerBase:
         for k in self._steps:
             steps_status.append({"func": k.__name__, "status": STATUS.NOT_INITIALIZED.value})
 
-        self._node = NodeQuestioner(
+        node_class = create_node_questioner("Questioner")
+
+        self._node = node_class(
             uuid_user = self.uuid_user
+            , class_name = self.__class__.__name__
             , steps_status = steps_status
             , questioner_status = 1
         )
